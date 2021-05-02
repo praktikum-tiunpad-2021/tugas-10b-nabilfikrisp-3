@@ -3,6 +3,7 @@
 #include <functional>
 #include <unordered_map>
 #include <unordered_set>
+#include <stack>
 
 namespace strukdat {
 
@@ -35,7 +36,7 @@ class graph {
    *
    * @constructor
    */
-  graph() {}
+  graph(){}
 
   /**
    * @brief Menambahkan vertex baru pada graph
@@ -50,6 +51,7 @@ class graph {
 
   void remove_vertex(const VertexType &val) {
     // TODO: Implementasikan!
+    _adj_list.erase(val);
   }
 
   /**
@@ -60,6 +62,20 @@ class graph {
    */
   void add_edge(const VertexType &val1, const VertexType val2) {
     // TODO: Implementasikan!
+    list_type &adj1 = _adj_list.at(val1),
+              &adj2 = _adj_list.at(val2);
+    
+    auto it = adj1.find(val2);
+
+    if(it == adj1.end()){
+      adj1.insert(val2);
+    }
+
+    it = adj2.find(val1);
+
+    if(it == adj2.end()){
+      adj2.insert(val1);
+    }
   }
 
   /**
@@ -67,8 +83,22 @@ class graph {
    *
    * @param val nilai dari vertex yang akan dihapus
    */
-  void remove_edge(const VertexType &val1, const VertexType &val2) {
+  void remove_edge(const VertexType &val1, const VertexType &val2){
     // TODO: Implementasikan!
+    list_type &adj1 = _adj_list.at(val1),
+              &adj2 = _adj_list.at(val2);
+    
+    auto it = adj1.find(val2);
+
+    if(it != adj1.end()){
+      adj1.erase(it);
+    }
+
+    it = adj2.find(val1);
+
+    if(it != adj2.end()){
+      adj2.erase(it);
+    }
   }
 
   /**
@@ -81,6 +111,7 @@ class graph {
    */
   size_t order() const {
     // TODO: Implementasikan!
+    return _adj_list.size();
   }
 
   /**
@@ -93,6 +124,13 @@ class graph {
    */
   bool is_edge(const VertexType &val1, const VertexType &val2) const {
     // TODO: Implementasikan!
+    list_type it1 = _adj_list.at(val1);
+    for(auto i = it1.begin(); i != it1.end(); ++i){
+      if(*i == val2){
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
@@ -101,9 +139,33 @@ class graph {
    * @param root vertex awal
    * @param func fungsi yang akan dieksekusi pada setiap vertex
    */
-  void bfs(const VertexType &root,
-           std::function<void(const VertexType &)> func) const {
+  void bfs(const VertexType &root,  
+          std::function<void(const VertexType &)> func) const {
     // TODO: Implementasikan!
+    adj_list_type adj_help = _adj_list;
+    std::unordered_map<VertexType, bool> visited;
+    for(auto i=adj_help.begin(); i!=adj_help.end(); ++i){
+        visited.insert(std::make_pair(i->first, false));
+    }
+    
+    std::vector<VertexType> q;
+    VertexType vHelp = root;
+    q.push_back(vHelp);
+    visited[vHelp] = true;
+
+    while(!q.empty()){
+      vHelp = q.front();
+      q.erase(q.begin());
+      func(vHelp);
+      
+      for(auto i = adj_help[vHelp].begin();
+          i != adj_help[vHelp].end(); ++i){
+        if(visited[*i] == false){
+          visited[*i] = true;
+          q.push_back(*i);
+        }
+      }
+    }
   }
 
   /**
@@ -115,6 +177,28 @@ class graph {
   void dfs(const VertexType &root,
            std::function<void(const VertexType &)> func) const {
     // TODO: Implementasikan!
+    std::unordered_map<VertexType, bool> visited;
+    for (auto &i : _adj_list) {
+      visited.insert(std::make_pair(i.first, false));
+    }
+
+    std::stack<VertexType> s;
+    s.push(root);
+    while (!s.empty()) {
+      VertexType vHelp = s.top();
+      s.pop();
+
+      if (!visited[vHelp]) {
+        func(vHelp);
+        visited[vHelp] = true;
+      }
+
+      for (auto &i : _adj_list.at(vHelp)) {
+        if (!visited[i]) {
+          s.push(i);
+        }
+      }
+    }
   }
 
  private:
